@@ -1,26 +1,60 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import Layout from './hoc/Layout/Layout';
+import BurgerBuilder from './containers/BurgerBuilder/BurgerBuilder';
+import { Switch, Route } from 'react-router-dom';
+import Logout from './containers/Auth/Logout/Logout';
+import { connect } from 'react-redux';
+import { checkAuthState } from './store/actions';
+import asyncComponent from './hoc/asyncComponent/asyncComponent';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+const asyncOrders = asyncComponent(() => {
+  return import('./containers/Orders/Orders');
+})
+const asyncCheckout = asyncComponent(() => {
+  return import('./containers/Checkout/Checkout');
+})
+const asyncAuth = asyncComponent(() => {
+  return import('./containers/Auth/Auth');
+})
+
+class App extends React.Component {
+
+  componentDidMount() {
+    this.props.checkAuthState();
+  }
+
+  render() {
+    let routes = (
+      <Switch>
+        <Route path="/auth" component={asyncAuth} />
+        <Route path="/" component={BurgerBuilder} />
+      </Switch>
+    );
+    if (this.props.isAuth) {
+      routes = (
+        <Switch>
+          <Route path="/checkout" component={asyncCheckout} />
+          <Route path="/orders" component={asyncOrders} />
+          <Route path="/logout" component={Logout} />
+          <Route path="/auth" component={asyncAuth} />
+          <Route path="/" component={BurgerBuilder} />
+        </Switch>
+      );
+    }
+    return (
+      <Layout>
+        {routes}
+      </Layout>
+    );
+  }
 }
 
-export default App;
+const mapStateToProps = state => ({
+  isAuth: state.auth.token !== null
+})
+
+const mapDispatchToProps = dispatch => ({
+  checkAuthState: () => dispatch(checkAuthState())
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);
