@@ -1,5 +1,4 @@
 import * as actionTypes from './actionTypes';
-import axios from '../../axios-orders';
 
 export const addIngredient = (ingredient) => {
   return {
@@ -24,14 +23,6 @@ export const fetchIngredientsFailed = () => ({
   type: actionTypes.FETCH_INGREDIENTS_FAILED
 })
 
-export const initIngredients = () => {
-  return dispatch => {
-    axios.get('/ingredients.json')
-      .then(({ data }) => {
-        dispatch(setIngredients(data))
-      })
-      .catch((error) => {
-        dispatch(fetchIngredientsFailed())
-      })
-  }
-}
+export const initIngredients = () => ({
+  type: actionTypes.INIT_INGREDIENTS
+});
