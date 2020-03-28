@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import Burger from '../../components/Burger/Burger';
 import BuildControls from '../../components/Burger/BuildControls/BuildControls';
@@ -10,70 +10,69 @@ import Spinner from '../../components/UI/Spinner/Spinner';
 import withErrorHandler from '../../hoc/withErrorHandler/withErrorHandler';
 import * as actions from '../../store/actions/index';
 
-export class BurgerBuilder extends Component {
-  state = {
-    purchasing: false
-  };
+const BurgerBuilder = props => {
 
-  componentDidMount() {
-    this.props.initIngredients();
-  }
-  
-  purshaseHandler = () => {
-    if (this.props.isAuth) {
-      this.setState({ purchasing: true })
+  const [purchasing, setPurchasing] = useState(false);
+
+  const { initIngredients } = props;
+
+  useEffect(() => {
+    initIngredients();
+  }, [initIngredients])
+
+  const purshaseHandler = () => {
+    if (props.isAuth) {
+      setPurchasing(true)
     } else {
-      this.props.setAutoRedirectPath('/checkout');
-      this.props.history.push('/auth');
+      props.setAutoRedirectPath('/checkout');
+      props.history.push('/auth');
     }
   }
 
-  purchaseCancelHandler = () => {
-    this.setState({ purchasing: false })
+  const purchaseCancelHandler = () => {
+    setPurchasing(false)
   }
 
-  purshaseContinueHandler = () => {
-    this.props.purchaseInit();
-    this.props.history.push('/checkout');
+  const purshaseContinueHandler = () => {
+    props.purchaseInit();
+    props.history.push('/checkout');
   }
 
-  render() {
-    let burger = this.props.error ? <p>Failed to fetch ingredients.</p> : <Spinner />;
-    let orderSummary = null;
-    if (this.props.ingredients) {
-      const disabledIngredients = {};
-      Object.entries(this.props.ingredients).forEach(([ingredient, value]) => {
-        disabledIngredients[ingredient] = value === 0;
-      });
-      burger = (
-        <>
-          <Burger ingredients={this.props.ingredients} />
-          <BuildControls
-            isAuth={this.props.isAuth}
-            order={this.purshaseHandler}
-            disabledIngredients={disabledIngredients}
-            addIngredient={this.props.addIngredient}
-            removeIngredient={this.props.removeIngredient}
-            price={this.props.totalPrice} />
-        </>
-      );
-      orderSummary = <OrderSummary
-        price={this.props.totalPrice}
-        cancel={this.purchaseCancelHandler}
-        continue={this.purshaseContinueHandler}
-        ingredients={this.props.ingredients} />;
-    }
-
-    return (
+  let burger = props.error ? <p>Failed to fetch ingredients.</p> : <Spinner />;
+  let orderSummary = null;
+  if (props.ingredients) {
+    const disabledIngredients = {};
+    Object.entries(props.ingredients).forEach(([ingredient, value]) => {
+      disabledIngredients[ingredient] = value === 0;
+    });
+    burger = (
       <>
-        <Backdrop show={this.state.purchasing} closeModal={this.purchaseCancelHandler} />
-        <Modal show={this.state.purchasing}>
-          {orderSummary}
-        </Modal>
-        {burger}
+        <Burger ingredients={props.ingredients} />
+        <BuildControls
+          isAuth={props.isAuth}
+          order={purshaseHandler}
+          disabledIngredients={disabledIngredients}
+          addIngredient={props.addIngredient}
+          removeIngredient={props.removeIngredient}
+          price={props.totalPrice} />
       </>
     );
+    orderSummary = <OrderSummary
+      price={props.totalPrice}
+      cancel={purchaseCancelHandler}
+      continue={purshaseContinueHandler}
+      ingredients={props.ingredients} />;
   }
+
+  return (
+    <>
+      <Backdrop show={purchasing} closeModal={purchaseCancelHandler} />
+      <Modal show={purchasing}>
+        {orderSummary}
+      </Modal>
+      {burger}
+    </>
+  );
 }
 
 const mapStateToProps = (state) => {

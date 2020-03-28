@@ -1,52 +1,54 @@
-import React from 'react';
+import React, { useEffect, Suspense } from 'react';
 import Layout from './hoc/Layout/Layout';
 import BurgerBuilder from './containers/BurgerBuilder/BurgerBuilder';
 import { Switch, Route } from 'react-router-dom';
 import Logout from './containers/Auth/Logout/Logout';
 import { connect } from 'react-redux';
 import { checkAuthState } from './store/actions';
-import asyncComponent from './hoc/asyncComponent/asyncComponent';
 
-const asyncOrders = asyncComponent(() => {
+const Orders = React.lazy(() => {
   return import('./containers/Orders/Orders');
 })
-const asyncCheckout = asyncComponent(() => {
+const Checkout = React.lazy(() => {
   return import('./containers/Checkout/Checkout');
 })
-const asyncAuth = asyncComponent(() => {
+const Auth = React.lazy(() => {
   return import('./containers/Auth/Auth');
 })
 
-class App extends React.Component {
+const App = (props) => {
+  const { checkAuthState } = props;
 
-  componentDidMount() {
-    this.props.checkAuthState();
-  }
+  useEffect(() => {
+    checkAuthState();
+  }, [checkAuthState])
 
-  render() {
-    let routes = (
+
+  let routes = (
+    <Switch>
+      <Route path="/auth" component={Auth} />
+      <Route path="/" component={BurgerBuilder} />
+    </Switch>
+  );
+  if (props.isAuth) {
+    routes = (
       <Switch>
-        <Route path="/auth" component={asyncAuth} />
+        <Route path="/checkout" component={Checkout} />
+        <Route path="/orders" component={Orders} />
+        <Route path="/logout" component={Logout} />
+        <Route path="/auth" component={Auth} />
         <Route path="/" component={BurgerBuilder} />
       </Switch>
     );
-    if (this.props.isAuth) {
-      routes = (
-        <Switch>
-          <Route path="/checkout" component={asyncCheckout} />
-          <Route path="/orders" component={asyncOrders} />
-          <Route path="/logout" component={Logout} />
-          <Route path="/auth" component={asyncAuth} />
-          <Route path="/" component={BurgerBuilder} />
-        </Switch>
-      );
-    }
-    return (
-      <Layout>
-        {routes}
-      </Layout>
-    );
   }
+  return (
+    <Layout>
+      <Suspense fallback={<p>Loading...</p>}>
+        {routes}
+      </Suspense>
+    </Layout>
+  );
+
 }
 
 const mapStateToProps = state => ({

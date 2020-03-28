@@ -1,22 +1,19 @@
 import React from 'react';
 import styles from './Modal.module.css';
 
-class Modal extends React.Component {
-  shouldComponentUpdate(nextProps, nextState) {
-    return (nextProps.show !== this.props.show) || (nextProps.children !== this.props.children);
-  }
-  render() {
-    return (
-      <div
+const Modal = props => {
+  return (
+    <div
       style={{
-        opacity: this.props.show ? 1 : 0,
-        transform: this.props.show ? 'translateY(0)' : 'translateY(-100vh)'
+        opacity: props.show ? 1 : 0,
+        transform: props.show ? 'translateY(0)' : 'translateY(-100vh)'
       }}
       className={styles.Modal}>
-      {this.props.children}
+      {props.children}
     </div>
-    );
-  }
+  );
 }
 
-export default Modal;
+export default React.memo(Modal, (prevProps, nextProps) => {
+  return ((prevProps.show === nextProps.show) && (!nextProps.show || prevProps.children === nextProps.children));
+});

@@ -1,43 +1,40 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useEffect, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import Order from '../../components/Order/Order';
 import axios from '../../axios-orders';
 import withErrorHandler from '../../hoc/withErrorHandler/withErrorHandler';
 import * as actions from '../../store/actions/index';
 import Spinner from '../../components/UI/Spinner/Spinner';
 
-class Orders extends Component {
+const Orders = props => {
 
-  componentDidMount() {
-    this.props.fetchOrders(this.props.token, this.props.userId);
-  }
+  const loading = useSelector(state => state.order.loading);
+  const orders = useSelector(state => state.order.orders);
+  const token = useSelector(state => state.auth.token);
+  const userId = useSelector(state => state.auth.userId);
 
-  render() {
-    let orders = <Spinner />
-    if(!this.props.loading) {
-      orders = this.props.orders.map(order =>
-        <Order key={order.id} ingredients={order.ingredients} price={order.totalPrice} />)
-      if(orders.length < 1) {
-        orders = <h3>Looks like you haven't ordered anything yet.</h3>
-      }
+  const dispatch = useDispatch();
+  const fetchOrders = useCallback((token, userId) => dispatch(actions.fetchOrders(token, userId)), [
+    dispatch
+  ]);
+
+  useEffect(() => {
+    fetchOrders(token, userId);
+  }, [fetchOrders, token, userId])
+
+  let userOrders = <Spinner />
+  if (!loading) {
+    userOrders = orders.map(order =>
+      <Order key={order.id} ingredients={order.ingredients} price={order.totalPrice} />)
+    if (orders.length < 1) {
+      userOrders = <h3>Looks like you haven't ordered anything yet.</h3>
     }
-    return (
-      <div>
-        {orders}
-      </div>
-    );
   }
+  return (
+    <div>
+      {userOrders}
+    </div>
+  );
 }
 
-const mapStateToProps = state => ({
-  loading: state.order.loading,
-  orders: state.order.orders,
-  token: state.auth.token,
-  userId: state.auth.userId
-})
-
-const mapDispatchToProps = dispatch => ({
-  fetchOrders: (token, userId) => dispatch(actions.fetchOrders(token, userId))
-})
-
-export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(Orders, axios));
+export default withErrorHandler(Orders, axios);
