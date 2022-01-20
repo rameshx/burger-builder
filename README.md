@@ -9,6 +9,6 @@ A React application that allows users to customize and order burgers.
 - Redux
 - Redux Saga
 
-### Screenshot
+## Screenshot
 
 ![Burger Builder](screenshots/burger.png)
